@@ -57,19 +57,19 @@ For example, in JavaScript do the following:
 ```
 
 Possible `response` values:
-```json
-  // User is authenticated, set the session cookie and redirect to the webmail page /webmail/mail
 
+#### User is authenticated, set the session cookie and redirect to the webmail page /webmail/mail
+```
   {
     "authed": true,
     "session": @string {session_id},
     "csrf_token": @string, // base64 encoded token for POST, PUT, DELETE requests
-    "user": @string {user}, // the users actual email address
+    "user": @string, // the users actual email address
     "remembered": @boolean
   }
-
-  // User is almost authenticated, redirect to the Two Factor Auth page /webmail/2fa
-
+```
+#### User is almost authenticated, redirect to the Two Factor Auth page /webmail/2fa
+```
   {
     "authed": false,
     "warning": "TwoFactorAuthRequired",
@@ -77,9 +77,9 @@ Possible `response` values:
     "user": @string, // the users actual email address
     "partial": @string // a partially obfuscated email address where the code is sent if the user has this configured
   }
-
-  // User is authenticted, redirect to the Two Factor Auth Setup page /webmail/2fasetup
-
+```
+#### User is authenticted, redirect to the Two Factor Auth Setup page /webmail/2fasetup
+```
   {
     "authed": true,
     "session": @string,
@@ -88,9 +88,9 @@ Possible `response` values:
     "token": @string,
     "user": @string // the users actual email address
   }
-
-  // User is not authenticated, the user need to changes the password before sign-in
-
+```
+#### User is not authenticated, the user need to changes the password before sign-in
+```
   {
     "authed": false,
     "warning": "OldPassword",
