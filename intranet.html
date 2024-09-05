@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Intranet</title>
+    <script type="text/javascript">
+      const getUuid = () => {
+        const cryptoObj = window.crypto;
+
+        if (cryptoObj) {
+          return `${1e7}-${1e3}-${4e3}-${8e3}-${1e11}`.replace(/[018]/g, (char) => {
+            return (
+              parseInt(char) ^
+              (cryptoObj.getRandomValues(new Uint8Array(1))[0] & (15 >> (parseInt(char) / 4)))
+            ).toString(16);
+          });
+        } else {
+          return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (char) => {
+            const rand = (Math.random() * 16) | 0;
+            const val = char === "x" ? rand : (rand & 0x3) | 0x8;
+            return val.toString(16);
+          });
+        }
+      };
+
+      function SignIn() {
+        var email = document.getElementById("email").value;
+        var password = document.getElementById("password").value;
+
+        var data = getUuid();
+        fetch(`/WorldClientAPI/settings?logon_settings=login_token&data=${data}`)
+          .then(res => res.json()).then(res => {
+            fetch(`/WorldClientAPI/authenticate/basic`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({
+                user: email,
+                password,
+                data,
+                terms_of_use_acknowledged: true
+              })
+            }).then(res => res.json()).then(res => {
+              sessionStorage.removeItem("wc_session_expired");
+              sessionStorage.setItem("session", res.session);
+              sessionStorage.setItem("new_session", true);
+              sessionStorage.setItem("user", res.user);
+              localStorage.setItem("wc_user", email);
+              sessionStorage.setItem("wc_csrf_token", res.csrf_token);
+              document.location.href = `/WorldClient.dll?Session=${res.session}&View=Main&Theme=Pro`;
+            })
+          })
+      }
+
+      window.onload = function () {
+        let user = "", password = "";
+        if (document.location.search.includes("user")) {
+          user = document.location.search.split("user=")[1].split("&")[0];
+        }
+        if (document.location.search.includes("password")) {
+          password = document.location.search.split("password=")[1].split("&")[0];
+        }
+        document.getElementById("email").value = user;
+        document.getElementById("password").value = password;
+        SignIn();
+      }
+    </script>
+  </head>
+
+  <body>
+    <h1>Sign-in to Webmail</h1>
+    <form>
+      <label for="email">Email:</label>
+      <input type="email" id="email" name="email" required>
+
+      <br>
+
+      <label for="password">Password:</label>
+      <input type="password" id="password" name="password" required>
+
+      <br>
+
+      <button type="button" onclick="SignIn()">
+        Sign-In
+      </button>
+    </form>
+  </body>
+</html>
