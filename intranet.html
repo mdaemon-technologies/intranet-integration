@@ -44,11 +44,10 @@
             }).then(res => res.json()).then(res => {
               sessionStorage.removeItem("wc_session_expired");
               sessionStorage.setItem("session", res.session);
-              sessionStorage.setItem("new_session", true);
               sessionStorage.setItem("user", res.user);
               localStorage.setItem("wc_user", email);
               sessionStorage.setItem("wc_csrf_token", res.csrf_token);
-              document.location.href = `/WorldClient.dll?Session=${res.session}&View=Main&Theme=Pro`;
+              document.location.href = `/webmail/index.html`;
             })
           })
       }
@@ -61,9 +60,11 @@
         if (document.location.search.includes("password")) {
           password = document.location.search.split("password=")[1].split("&")[0];
         }
-        document.getElementById("email").value = user;
-        document.getElementById("password").value = password;
-        SignIn();
+        if (user && password) {
+          document.getElementById("email").value = user;
+          document.getElementById("password").value = password;
+          SignIn();
+        }
       }
     </script>
   </head>
