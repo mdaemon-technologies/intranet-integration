@@ -23,9 +23,9 @@
         }
       };
 
-      function SignIn() {
-        var email = document.getElementById("email").value;
-        var password = document.getElementById("password").value;
+      function SignIn(u, p) {
+        user = u || document.getElementById("user").value;
+        password = p || document.getElementById("password").value;
 
         var data = getUuid();
         fetch(`/WorldClientAPI/settings?logon_settings=login_token&data=${data}`)
@@ -36,7 +36,7 @@
                 "Content-Type": "application/json"
               },
               body: JSON.stringify({
-                user: email,
+                user,
                 password,
                 data,
                 terms_of_use_acknowledged: true
@@ -45,7 +45,7 @@
               sessionStorage.removeItem("wc_session_expired");
               sessionStorage.setItem("session", res.session);
               sessionStorage.setItem("user", res.user);
-              localStorage.setItem("wc_user", email);
+              localStorage.setItem("wc_user", user);
               sessionStorage.setItem("wc_csrf_token", res.csrf_token);
               document.location.href = `/webmail/index.html`;
             })
@@ -56,14 +56,14 @@
         let user = "", password = "";
         if (document.location.search.includes("user")) {
           user = document.location.search.split("user=")[1].split("&")[0];
+          document.getElementById("user").value = user;
         }
         if (document.location.search.includes("password")) {
           password = document.location.search.split("password=")[1].split("&")[0];
+          document.getElementById("password").value = password;
         }
         if (user && password) {
-          document.getElementById("email").value = user;
-          document.getElementById("password").value = password;
-          SignIn();
+          SignIn(user, password);
         }
       }
     </script>
@@ -72,8 +72,8 @@
   <body>
     <h1>Sign-in to Webmail</h1>
     <form>
-      <label for="email">Email:</label>
-      <input type="email" id="email" name="email" required>
+      <label for="user">Email:</label>
+      <input type="user" id="user" name="user" required>
 
       <br>
 

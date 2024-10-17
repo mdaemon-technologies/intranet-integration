@@ -11,7 +11,7 @@ In the file `MDaemon\WorldClient\Domains.ini` add the following setting line to 
 
 Where `%HOSTS%` is a semi-colon separated list of hosts to allow API access from.
 
-Example: https://www.example.com;https://www.example2.com
+Example: https://mail.mywebmailsite.com;https://mail.mywebmailsite2.com
 
 Without this setting, only the web address being hosted by MDaemon Webmail will be able to access the API.
 
@@ -30,7 +30,7 @@ For example, in JavaScript do the following:
 ```javascript
   const some_uuid = "data string that is a unique identifier";
 
-  fetch(`https://www.example.com/WorldClientAPI/settings/logon_settings=login_token&data=${some_uuid}`, {
+  fetch(`https://mail.mywebmailsite.com/WorldClientAPI/settings/logon_settings=login_token&data=${some_uuid}`, {
     method: "GET"
   });
 ```
@@ -39,13 +39,13 @@ For example, in JavaScript do the following:
   Make sure to save the cookies from the first request and send them with the second request if you're not using the browser.
 
 ```javascript
-  fetch("https://www.example.com/WorldClientAPI/authenticate/basic/", {
+  fetch("https://mail.mywebmailsite.com/WorldClientAPI/authenticate/basic/", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      user: "user@example.com",
+      user: "user@mywebmailsite.com",
       password: "password",
       data: some_uuid,
       terms_of_use_acknowledged: true, // if required
@@ -58,7 +58,7 @@ For example, in JavaScript do the following:
 
 Possible `response` values:
 
-#### User is authenticated, set the session cookie and redirect to the webmail page /webmail/mail
+#### User is authenticated, set the session and redirect to the webmail page /webmail/mail
 ```
   {
     "authed": true,
@@ -89,7 +89,7 @@ Possible `response` values:
     "user": @string // the users actual email address
   }
 ```
-#### User is not authenticated, the user need to changes the password before sign-in
+#### User is not authenticated, the user needs to change the password before sign-in
 ```
   {
     "authed": false,
@@ -100,18 +100,18 @@ Possible `response` values:
 
 ## Working Example
 
-You could drop the `intranet.html` file into your MDaemon\WorldClient\HTML directory and use it as a starting point.
+Drop the `intranet.html` file from this repository into your MDaemon\WorldClient\HTML directory and use it as a starting point.
+It's located at [https://github.com/maemon-technologies/intranet-integration/blob/main/intranet.html](intranet.html)
 
-To make use of the file, pass the `user` and `password` parameters to the page like this:
-
-These two parameters will be used immediately and will not continue to appear in the URL.
+To make use of the page, pass the `user` and `password` parameters to it from your intranet site like this:
 
 ```html
 
   <script>
     function webmailSignIn() {
       const signInLink = document.getElementById("signInLink");
-      signInLink.href = "https://www.example.com/intranet.html?user=user@example.com&password=password";
+      // using whatever method you need in order to get the user and password
+      signInLink.href = "https://mail.mywebmailsite.com/intranet.html?user=user@mywebmailsite.com&password=password";
       signInLink.click();
     }
 
@@ -122,30 +122,57 @@ These two parameters will be used immediately and will not continue to appear in
   <a id="signInLink" target="_blank"></a>
 
 ```
+The `user` and `password` parameters will not remain in the URL for long, but they will be visible, so base64 encoding them or using encryption is recommended.
 
-You could even base64 encode or encrypt the user and password and change the intranet.html file to decode them before posting them to the WorldClientAPI server. 
+Change the intranet.html file to decode or decrypt them before posting them to the WorldClientAPI server. 
 
 ```javascript
-  const user = btoa("user@example.com");
+  // your file
+  const user = btoa("user@mywebmailsite.com");
   const password = btoa("password");
 
 
   // in intranet.html
-
   window.onload = function () {
     let user = "", password = "";
     if (document.location.search.includes("user")) {
       user = document.location.search.split("user=")[1].split("&")[0];
+      user = atob(user);
+      document.getElementById("user").value = user;
     }
     if (document.location.search.includes("password")) {
       password = document.location.search.split("password=")[1].split("&")[0];
+      password = atob(password);
+      document.getElementById("password").value = password;
     }
     if (user && password) {
-      document.getElementById("email").value = atob(user);
-      document.getElementById("password").value = atob(password);
-      SignIn();
+      SignIn(user, password);
     }
-  }
+  };
+```
+
+An additional security measure that you could take is to use the hash portion of the URL to pass the `user` and `password` to `intranet.html` instead of the query portion, since the hash portion is not visible to the server. The file would need to be modified to get the `user` and `password` from the hash portion of the URL.
+
+For example: 
+
+`https://mail.mywebmailsite.com/intranet.html#user=user@mywebmailsite.com&password=password`
+
+```javascript
+  window.onload = function () {
+    let user = "", password = "";
+    if (document.location.hash.includes("user")) {
+      user = document.location.hash.split("user=")[1].split("&")[0];
+      document..getElementById("user").value = user;
+    }
+    if (document.location.hash.includes("password")) {
+      password = document.location.hash.split("password=")[1].split("&")[0];
+      document.getElementById("password").value = password;
+    }
+    document.location.hash = "";
+    if (user && password) {
+      SignIn(user, password);
+    }
+  };
 ```
 
 The sample `intranet.html` file does not have styling or handling of Two Factor Authentication, Change Password, or other features.
